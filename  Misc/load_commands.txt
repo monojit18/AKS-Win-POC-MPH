@@ -1,0 +1,63 @@
+0dbd6e44-cc2c-4962-897e-fe22893c3624
+21f13f22-aa8e-4318-a7c6-fb49fcb95106
+
+{
+  "appId": "29a64b73-3d7b-4536-a2a8-ce556d9bc569",
+  "displayName": "azure-cli-2020-05-19-19-59-36",
+  "name": "http://azure-cli-2020-05-19-19-59-36",
+  "password": "ce53e1d4-f08c-4870-9120-781d76427fa5",
+  "tenant": "665b6c62-7310-4d39-9abb-32a0cbc3b90f"
+}
+
+az role assignment create --assignee 29a64b73-3d7b-4536-a2a8-ce556d9bc569 --role="Network Contributor" --scope=/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourceGroups/infraservices-nextgen-rg/providers/Microsoft.Network/virtualNetworks/nextgenlabs-vnet/subnets/pvtsub-win-aks
+az role assignment create --assignee <> --role=acrpush --scope=/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourceGroups/AKS-rg/providers/Microsoft.ContainerRegistry/registries/aksmphasisacr
+
+{
+  "canDelegate": null,
+  "id": "/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourceGroups/infraservices-nextgen-rg/providers/Microsoft.Network/virtualNetworks/nextgenlabs-vnet/providers/Microsoft.Authorization/roleAssignments/59994393-1bd1-4cb0-8a12-6c922a6a34c5",
+  "name": "59994393-1bd1-4cb0-8a12-6c922a6a34c5",
+  "principalId": "86e4c396-5efc-4af2-8533-44d9f98e89c1",
+  "principalType": "ServicePrincipal",
+  "resourceGroup": "infraservices-nextgen-rg",
+  "roleDefinitionId": "/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/providers/Microsoft.Authorization/roleDefinitions/4d97b98b-1d4f-4787-a291-c67834d212e7",
+  "scope": "/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourceGroups/infraservices-nextgen-rg/providers/Microsoft.Network/virtualNetworks/nextgenlabs-vnet",
+  
+}
+PASSWORD_WIN="MSFTMphs@2020"
+
+az aks create \
+    --resource-group AKS-rg \
+    --name aks-mph-poc-windows-cluster \
+    --enable-addons=monitoring \
+    --node-count 2 \
+    --vnet-subnet-id "/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourceGroups/infraservices-nextgen-rg/providers/Microsoft.Network/virtualNetworks/nextgenlabs-vnet/subnets/pvtsub-win-aks" \
+    --enable-addons monitoring \
+    --kubernetes-version 1.15.7 \
+    --generate-ssh-keys \
+    --windows-admin-password $PASSWORD_WIN \
+    --windows-admin-username azureuser \
+    --vm-set-type VirtualMachineScaleSets \
+    --load-balancer-sku standard \
+    --service-principal 29a64b73-3d7b-4536-a2a8-ce556d9bc569 \
+    --client-secret ce53e1d4-f08c-4870-9120-781d76427fa5 \
+    --tags "primary_owner=Jagath.M@mphasis.com project_code=98203 project_name=CIO_Cloud_CSP secondary_owner=guruprasad.bm@mphasis.com" \
+    --workspace-resource-id "/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourcegroups/aks-rg/providers/microsoft.operationalinsights/workspaces/aks-mph-win-lw" \
+    --network-plugin azure
+    
+az aks nodepool add \
+    --resource-group AKS-rg \
+    --enable-cluster-autoscaler \
+    --cluster-name aks-mph-poc-windows-cluster \
+    --os-type Windows \
+    --node-vm-size Standard_D4s_v3 \
+    --node-osdisk-size 100 \
+    --name npwin \
+    --node-count 3 --max-pods 50 \
+    --min-count 3 --max-count 10 \
+    --kubernetes-version 1.15.7
+
+k create secret docker-registry pcr-secret --docker-server=ciopocacr.azurecr.io --docker-username=0dbd6e44-cc2c-4962-897e-fe22893c3624 --docker-password=21f13f22-aa8e-4318-a7c6-fb49fcb95106 -n pcr-dev
+
+// ACI
+az container create -g AKS-rg -n pcr-win-aci-app --image aksmphasisacr.azurecr.io/pcr:v1.0.5 --os-type Windows --cpu 2 --memory 16 --dns-name-label pcr-aci-app --ports 80 --registry-username=aksmphasisacr --registry-password=AAroXwN7Zh0pwthwT6t5W8Em=OSCa3N6
+az container create -g AKS-rg -n pcr-win-aci --image mcr.microsoft.com/dotnet/framework/samples:aspnetapp --os-type Windows --cpu 2 --memory 16 --dns-name-label pcr-aci --ports 80
