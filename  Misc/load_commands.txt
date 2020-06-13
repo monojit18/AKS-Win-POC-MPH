@@ -23,7 +23,7 @@ az role assignment create --assignee <> --role=acrpush --scope=/subscriptions/76
   "scope": "/subscriptions/76012eff-9c0f-4669-bf1b-c50d98038f68/resourceGroups/infraservices-nextgen-rg/providers/Microsoft.Network/virtualNetworks/nextgenlabs-vnet",
   
 }
-PASSWORD_WIN="MSFTMphs@2020"
+PASSWORD_WIN="MSFTPwd@2020"
 
 az aks create \
     --resource-group AKS-rg \
